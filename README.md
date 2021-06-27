@@ -1,2 +1,6 @@
 # dice
-roll dices at leisure.
+roll dice at leisure.
+
+dependencies:
+
+* antlr 4
