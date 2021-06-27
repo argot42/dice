@@ -1,13 +1,16 @@
 package main
 
 import (
-    "fmt"
-    "os"
-    "strings"
-    "bufio"
-    "strconv"
-    "math/rand"
-    "github.com/argot42/dice/parser"
+	"bufio"
+	"fmt"
+	"math/rand"
+	"os"
+	"strconv"
+	"strings"
+    "time"
+
+	"github.com/antlr/antlr4/runtime/Go/antlr"
+	"github.com/argot42/dice/parser"
 )
 
 func main() {
@@ -34,7 +37,19 @@ func main() {
 }
 
 func roll(in string) int {
-    return 0
+    is := antlr.NewInputStream(in)
+
+    lexer := parser.NewDiceLexer(is)
+    stream := antlr.NewCommonTokenStream(lexer, antlr.TokenDefaultChannel)
+
+    p := parser.NewDiceParser(stream)
+
+    var listener DiceListener
+    listener.Setup()
+
+    antlr.ParseTreeWalkerDefault.Walk(&listener, p.Start())
+
+    return listener.Stack.Pop()
 }
 
 type DiceListener struct {
@@ -60,8 +75,13 @@ func (s *Stack) Pop() (n int) {
     return
 }
 
+func (l *DiceListener) Setup() {
+    src := rand.NewSource(time.Now().UnixNano())
+    l.Random = rand.New(src)
+}
+
 func (l *DiceListener) ExitDic(ctx *parser.DicContext) {
-    dAmount, dType := l.Stack.Pop(), l.Stack.Pop()
+    dType, dAmount := l.Stack.Pop(), l.Stack.Pop()
 
     n := 0
     for i := 0; i < dAmount; i++ {
