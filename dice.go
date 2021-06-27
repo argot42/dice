@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"math/rand"
 	"os"
+    "io"
 	"strconv"
 	"strings"
     "time"
@@ -17,8 +18,14 @@ func main() {
     var r *bufio.Reader
 
     if len(os.Args) > 1 {
-        args := strings.Join(os.Args[1:], "\n")
-        r = bufio.NewReader(strings.NewReader(args))
+        var args strings.Builder
+
+        for _, s := range os.Args[1:] {
+            args.WriteString(s)
+            args.WriteRune('\n')
+        }
+
+        r = bufio.NewReader(strings.NewReader(args.String()))
     } else {
         r = bufio.NewReader(os.Stdin)
     }
@@ -26,7 +33,11 @@ func main() {
     for {
         line, err := r.ReadString('\n')
         if err != nil {
-            fmt.Fprint(os.Stderr, err)
+            if err == io.EOF {
+                break
+            }
+
+            fmt.Fprintf(os.Stderr, "error %s\n", err)
             os.Exit(1)
         }
 
@@ -82,6 +93,14 @@ func (l *DiceListener) Setup() {
 
 func (l *DiceListener) ExitDic(ctx *parser.DicContext) {
     dType, dAmount := l.Stack.Pop(), l.Stack.Pop()
+
+    if dType < 2 {
+        panic("dice type should be > 2")
+    }
+
+    if dAmount < 1 {
+        panic("dice amount should be > 1")
+    }
 
     n := 0
     for i := 0; i < dAmount; i++ {

@@ -7,7 +7,7 @@ DIV: '/';
 ADD: '+';
 SUB: '-';
 NUM: [0-9]+;
-WHI: [ \r\n\t]+ -> skip;
+WS: [ \r\n\t]+ -> skip;
 
 // Rules
 start : expression EOF;
